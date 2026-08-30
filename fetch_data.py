@@ -135,38 +135,52 @@ def fetch_market_data():
             v = 1.0 / df
             # Normalize to 1-year average = 100
             v_norm = v / v.mean()
-            # Geometric mean of the basket
-            geom_mean_basket = np.exp(np.log(v_norm).mean(axis=1))
             
-            result["custom_indices"] = []
+            # Columns order: USD, EUR, JPY, CNY, KRW
+            w_v1 = [0.20, 0.20, 0.20, 0.20, 0.20]
+            w_v2 = [0.607, 0.214, 0.117, 0.048, 0.014]
+            w_v3 = [0.25, 0.10, 0.10, 0.35, 0.20]
             
-            for currency, name_kr in [('USD', '달러'), ('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), ('CNY', '위안화')]:
-                idx_series = (v_norm[currency] / geom_mean_basket) * 100
-                labels = idx_series.index.strftime('%Y-%m-%d').tolist()
-                data = idx_series.tolist()
-                
-                if len(data) > 0:
-                    current_price = data[-1]
-                    prev_price = data[-2] if len(data) > 1 else current_price
-                    change_percent = ((current_price - prev_price) / prev_price) * 100
+            geom_mean_v1 = np.exp(np.average(np.log(v_norm), weights=w_v1, axis=1))
+            geom_mean_v2 = np.exp(np.average(np.log(v_norm), weights=w_v2, axis=1))
+            geom_mean_v3 = np.exp(np.average(np.log(v_norm), weights=w_v3, axis=1))
+            
+            result["custom_indices_v1"] = []
+            result["custom_indices_v2"] = []
+            result["custom_indices_v3"] = []
+            
+            currencies_to_loop = [('USD', '달러'), ('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), ('CNY', '위안화')]
+            
+            for version, geom_mean, target_list in [("v1", geom_mean_v1, result["custom_indices_v1"]), 
+                                                    ("v2", geom_mean_v2, result["custom_indices_v2"]), 
+                                                    ("v3", geom_mean_v3, result["custom_indices_v3"])]:
+                for currency, name_kr in currencies_to_loop:
+                    idx_series = (v_norm[currency] / geom_mean) * 100
+                    labels = idx_series.index.strftime('%Y-%m-%d').tolist()
+                    data = idx_series.tolist()
                     
-                    result["custom_indices"].append({
-                        "name": f"{name_kr} 커스텀 인덱스",
-                        "symbol": f"CIDX-{currency}",
-                        "current": round(current_price, 2),
-                        "change_percent": round(change_percent, 2),
-                        "stats": {
-                            "mean": round(float(np.mean(data)), 2),
-                            "median": round(float(np.median(data)), 2),
-                            "high": round(float(np.max(data)), 2),
-                            "low": round(float(np.min(data)), 2)
-                        },
-                        "history": {
-                            "labels": labels,
-                            "data": [round(val, 2) for val in data]
-                        }
-                    })
-            print("[OK] Calculated Custom Indices")
+                    if len(data) > 0:
+                        current_price = data[-1]
+                        prev_price = data[-2] if len(data) > 1 else current_price
+                        change_percent = ((current_price - prev_price) / prev_price) * 100
+                        
+                        target_list.append({
+                            "name": f"{name_kr} 인덱스 ({version.upper()})",
+                            "symbol": f"CIDX-{currency}-{version}",
+                            "current": round(current_price, 2),
+                            "change_percent": round(change_percent, 2),
+                            "stats": {
+                                "mean": round(float(np.mean(data)), 2),
+                                "median": round(float(np.median(data)), 2),
+                                "high": round(float(np.max(data)), 2),
+                                "low": round(float(np.min(data)), 2)
+                            },
+                            "history": {
+                                "labels": labels,
+                                "data": [round(val, 2) for val in data]
+                            }
+                        })
+            print("[OK] Calculated Custom Indices V1, V2, V3")
     except Exception as e:
         print(f"[ERROR] Error calculating custom indices: {e}")
 

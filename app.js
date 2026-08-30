@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear existing grids
         document.getElementById('exchange-rates-grid').innerHTML = '';
         document.getElementById('indices-grid').innerHTML = '';
-        document.getElementById('custom-indices-grid').innerHTML = '';
+        document.getElementById('custom-indices-v1-grid').innerHTML = '';
+        document.getElementById('custom-indices-v2-grid').innerHTML = '';
+        document.getElementById('custom-indices-v3-grid').innerHTML = '';
         document.getElementById('last-updated').textContent = 'Updating...';
         document.querySelector('.pulse-dot').style.display = 'block';
         document.getElementById('last-updated').style.color = 'var(--text-secondary)';
@@ -61,12 +63,20 @@ async function fetchData() {
             createCard(item, indicesGrid);
         });
         
-        // Render Custom Indices
-        if(data.custom_indices) {
-            const customGrid = document.getElementById('custom-indices-grid');
-            data.custom_indices.forEach(item => {
-                createCard(item, customGrid);
-            });
+        // Render Custom Indices V1
+        if(data.custom_indices_v1) {
+            const grid = document.getElementById('custom-indices-v1-grid');
+            data.custom_indices_v1.forEach(item => createCard(item, grid));
+        }
+        // Render Custom Indices V2
+        if(data.custom_indices_v2) {
+            const grid = document.getElementById('custom-indices-v2-grid');
+            data.custom_indices_v2.forEach(item => createCard(item, grid));
+        }
+        // Render Custom Indices V3
+        if(data.custom_indices_v3) {
+            const grid = document.getElementById('custom-indices-v3-grid');
+            data.custom_indices_v3.forEach(item => createCard(item, grid));
         }
 
     } catch (error) {

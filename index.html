@@ -32,9 +32,11 @@
         </header>
 
         <nav class="tabs">
-            <button class="tab-btn active" data-target="exchange-rates">🇰🇷 환율 (Exchange Rates)</button>
-            <button class="tab-btn" data-target="indices">🌍 인덱스 (Indices)</button>
-            <button class="tab-btn" data-target="custom-indices">🛠️ 커스텀 인덱스</button>
+            <button class="tab-btn active" data-target="exchange-rates">🇰🇷 환율</button>
+            <button class="tab-btn" data-target="indices">🌍 인덱스</button>
+            <button class="tab-btn" data-target="custom-indices-v1">🛠️ V1 (동일)</button>
+            <button class="tab-btn" data-target="custom-indices-v2">🛠️ V2 (거래량)</button>
+            <button class="tab-btn" data-target="custom-indices-v3">🛠️ V3 (한국교역)</button>
         </nav>
 
         <main>
@@ -55,24 +57,32 @@
                 </div>
             </section>
             
-            <!-- Custom Indices Section -->
-            <section id="custom-indices" class="tab-content">
-                <div class="grid" id="custom-indices-grid">
-                    <!-- Cards will be injected here by JS -->
-                </div>
+            <!-- Custom Indices V1 -->
+            <section id="custom-indices-v1" class="tab-content">
+                <div class="grid" id="custom-indices-v1-grid"></div>
                 <div class="section-description">
-                    <p>ℹ️ <strong>커스텀 인덱스 산출 방식:</strong> 달러, 유로, 엔, 위안, 원화로 구성된 5개국 통화 바스켓의 1년 평균 가치를 기준점(100)으로 삼아, 전 세계 주요 통화 대비 해당 통화가 상대적으로 얼마나 강세/약세인지를 기하평균으로 산출한 지수입니다.</p>
-                    <ul class="formula-list">
-                        <li><strong>1단계 (가치 역산):</strong> 각 통화의 대(對) 달러 환율을 역산(1/환율)하여 '1달러당 통화의 절대 가치'를 구합니다.</li>
-                        <li><strong>2단계 (정규화):</strong> 이 절대 가치를 지난 1년(52주)간의 '평균 절대 가치'로 나누어 정규화합니다. (즉, 1년 평균일 때 1.0이 됨)</li>
-                        <li><strong>3단계 (글로벌 기준값 산출):</strong> 5개국(USD, EUR, JPY, CNY, KRW)의 정규화된 가치를 모두 곱한 후 5제곱근을 취하는 <strong>기하평균(Geometric Mean)</strong> 방식으로 글로벌 기준값을 산출합니다.</li>
-                        <li><strong>4단계 (최종 인덱스):</strong> 개별 통화의 정규화된 가치를 글로벌 기준값으로 나눈 뒤 100을 곱하여, 다른 통화들 대비 얼마나 가치가 올랐는지(혹은 떨어졌는지)를 100을 기준으로 나타냅니다.</li>
-                    </ul>
+                    <p>ℹ️ <strong>V1 산출 방식 (동일 가중치):</strong> 모든 통화를 20%씩 균등하게 반영합니다. (USD 20%, EUR 20%, JPY 20%, CNY 20%, KRW 20%)</p>
+                </div>
+            </section>
+
+            <!-- Custom Indices V2 -->
+            <section id="custom-indices-v2" class="tab-content">
+                <div class="grid" id="custom-indices-v2-grid"></div>
+                <div class="section-description">
+                    <p>ℹ️ <strong>V2 산출 방식 (BIS 글로벌 거래량 기준):</strong> 2022년 국제결제은행(BIS) 외환 거래량 통계를 기준으로 실제 유동성을 반영합니다. (USD 60.7%, EUR 21.4%, JPY 11.7%, CNY 4.8%, KRW 1.4%)</p>
+                </div>
+            </section>
+
+            <!-- Custom Indices V3 -->
+            <section id="custom-indices-v3" class="tab-content">
+                <div class="grid" id="custom-indices-v3-grid"></div>
+                <div class="section-description">
+                    <p>ℹ️ <strong>V3 산출 방식 (한국 수출입 교역량 기준):</strong> 한국 경제의 체감 실효환율을 위해 주요 교역국 비중을 반영합니다. (CNY 35%, USD 25%, KRW 20%, EUR 10%, JPY 10%)</p>
                     <div class="strategy-description" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.1);">
                         <p style="text-align: left; margin-bottom: 0.5rem;">💡 <strong>투자/환전 전략 인사이트:</strong></p>
                         <ul class="formula-list">
                             <li><strong>내 통화(원화)가 100 이상일 때:</strong> 현재 원화 가치가 지난 1년 평균보다 <strong>강세(고평가)</strong>라는 뜻입니다.</li>
-                            <li><strong>상대 통화(엔/달러)가 100 이하일 때:</strong> 상대 통화 가치가 지난 1년 평균보다 <strong>약세(저평가)</strong>라는 뜻입니다.</li>
+                            <li><strong>상대 통화(달러)가 100 이하일 때:</strong> 상대 통화 가치가 지난 1년 평균보다 <strong>약세(저평가)</strong>라는 뜻입니다.</li>
                             <li><strong>결론:</strong> 원화 인덱스가 높고(>100), 환전하려는 대상 국가의 인덱스가 낮을수록(<100) <strong>"가장 비싼 원화를 내고, 가장 싼 외화를 사는" 절대적 환차익 유리 포지션</strong>에 해당합니다.</li>
                         </ul>
                     </div>
