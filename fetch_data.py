@@ -12,7 +12,10 @@ def fetch_market_data():
             "USD/KRW": "USDKRW=X",
             "JPY/KRW": "JPYKRW=X",
             "CNY/KRW": "CNYKRW=X",
-            "EUR/KRW": "EURKRW=X"
+            "EUR/KRW": "EURKRW=X",
+            "VND/KRW": "VNDKRW=X",
+            "TWD/KRW": "TWDKRW=X",
+            "AUD/KRW": "AUDKRW=X"
         },
         "indices": {
             "DXY (달러 인덱스)": "DX-Y.NYB"
@@ -127,8 +130,15 @@ def fetch_market_data():
         jpy_series = yf.Ticker('JPY=X').history(period='1y')['Close']
         cny_series = yf.Ticker('CNY=X').history(period='1y')['Close']
         krw_series = yf.Ticker('KRW=X').history(period='1y')['Close']
+        vnd_series = yf.Ticker('VND=X').history(period='1y')['Close']
+        twd_series = yf.Ticker('TWD=X').history(period='1y')['Close']
+        aud_series = yf.Ticker('AUD=X').history(period='1y')['Close']
         
-        df = pd.DataFrame({'USD': usd_series, 'EUR': eur_series, 'JPY': jpy_series, 'CNY': cny_series, 'KRW': krw_series}).dropna()
+        df = pd.DataFrame({
+            'USD': usd_series, 'EUR': eur_series, 'JPY': jpy_series, 
+            'CNY': cny_series, 'KRW': krw_series, 'VND': vnd_series, 
+            'TWD': twd_series, 'AUD': aud_series
+        }).dropna()
         
         if not df.empty:
             # Value of each currency in USD (1 / rate)
@@ -136,10 +146,10 @@ def fetch_market_data():
             # Normalize to 1-year average = 100
             v_norm = v / v.mean()
             
-            # Columns order: USD, EUR, JPY, CNY, KRW
-            w_v1 = [0.20, 0.20, 0.20, 0.20, 0.20]
-            w_v2 = [0.607, 0.214, 0.117, 0.048, 0.014]
-            w_v3 = [0.25, 0.10, 0.10, 0.35, 0.20]
+            # Columns order: USD, EUR, JPY, CNY, KRW, VND, TWD, AUD
+            w_v1 = [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]
+            w_v2 = [0.582, 0.205, 0.112, 0.046, 0.013, 0.001, 0.001, 0.040]
+            w_v3 = [0.175, 0.110, 0.077, 0.263, 0.200, 0.099, 0.044, 0.032]
             
             geom_mean_v1 = np.exp(np.average(np.log(v_norm), weights=w_v1, axis=1))
             geom_mean_v2 = np.exp(np.average(np.log(v_norm), weights=w_v2, axis=1))
@@ -149,7 +159,10 @@ def fetch_market_data():
             result["custom_indices_v2"] = []
             result["custom_indices_v3"] = []
             
-            currencies_to_loop = [('USD', '달러'), ('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), ('CNY', '위안화')]
+            currencies_to_loop = [
+                ('USD', '달러'), ('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), 
+                ('CNY', '위안화'), ('VND', '베트남 동'), ('TWD', '대만 달러'), ('AUD', '호주 달러')
+            ]
             
             for version, geom_mean, target_list in [("v1", geom_mean_v1, result["custom_indices_v1"]), 
                                                     ("v2", geom_mean_v2, result["custom_indices_v2"]), 
