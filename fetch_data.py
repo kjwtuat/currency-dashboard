@@ -34,7 +34,7 @@ def fetch_market_data():
     for name, symbol in tickers["exchange_rates"].items():
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="1y")
+            hist = ticker.history(period="5y")
             
             # Fallback for symbols with missing history (like CNYKRW=X)
             if len(hist) < 200 and symbol.endswith('KRW=X') and symbol != 'USDKRW=X':
@@ -43,8 +43,8 @@ def fetch_market_data():
                 base_ticker = yf.Ticker(f"{base_currency}=X")
                 krw_ticker = yf.Ticker("KRW=X")
                 
-                base_hist = base_ticker.history(period="1y")['Close']
-                krw_hist = krw_ticker.history(period="1y")['Close']
+                base_hist = base_ticker.history(period="5y")['Close']
+                krw_hist = krw_ticker.history(period="5y")['Close']
                 
                 # Calculate cross rate: (USD/KRW) / (USD/Base)
                 hist_close = krw_hist / base_hist
@@ -91,7 +91,7 @@ def fetch_market_data():
     for name, symbol in tickers["indices"].items():
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="1y")
+            hist = ticker.history(period="5y")
             
             labels = hist.index.strftime('%Y-%m-%d').tolist()
             data = hist['Close'].tolist()
@@ -126,15 +126,15 @@ def fetch_market_data():
     # Calculate Custom Indices
     print("Calculating Custom Indices...")
     try:
-        # Fetch histories for 1y
-        usd_series = pd.Series(1.0, index=yf.Ticker('KRW=X').history(period='1y').index)
-        eur_series = yf.Ticker('EUR=X').history(period='1y')['Close']
-        jpy_series = yf.Ticker('JPY=X').history(period='1y')['Close']
-        cny_series = yf.Ticker('CNY=X').history(period='1y')['Close']
-        krw_series = yf.Ticker('KRW=X').history(period='1y')['Close']
-        vnd_series = yf.Ticker('VND=X').history(period='1y')['Close']
-        twd_series = yf.Ticker('TWD=X').history(period='1y')['Close']
-        aud_series = yf.Ticker('AUD=X').history(period='1y')['Close']
+        # Fetch histories for 5y
+        usd_series = pd.Series(1.0, index=yf.Ticker('KRW=X').history(period='5y').index)
+        eur_series = yf.Ticker('EUR=X').history(period='5y')['Close']
+        jpy_series = yf.Ticker('JPY=X').history(period='5y')['Close']
+        cny_series = yf.Ticker('CNY=X').history(period='5y')['Close']
+        krw_series = yf.Ticker('KRW=X').history(period='5y')['Close']
+        vnd_series = yf.Ticker('VND=X').history(period='5y')['Close']
+        twd_series = yf.Ticker('TWD=X').history(period='5y')['Close']
+        aud_series = yf.Ticker('AUD=X').history(period='5y')['Close']
         
         df = pd.DataFrame({
             'USD': usd_series, 'EUR': eur_series, 'JPY': jpy_series, 
@@ -145,8 +145,9 @@ def fetch_market_data():
         if not df.empty:
             # Value of each currency in USD (1 / rate)
             v = 1.0 / df
-            # Normalize to 1-year average = 100
-            v_norm = v / v.mean()
+            # Normalize to 1-year average = 100 (approx 252 trading days)
+            v_1y_mean = v.tail(252).mean()
+            v_norm = v / v_1y_mean
             
             # Columns order: USD, EUR, JPY, CNY, KRW, VND, TWD, AUD
             w_v1 = [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]

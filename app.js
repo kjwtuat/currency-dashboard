@@ -1,3 +1,6 @@
+let globalMarketData = null;
+let currentChartInstances = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     // Tab Switching Logic
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -16,7 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-
+    // Timeframe Selector Logic
+    document.getElementById('timeframe-selector').addEventListener('change', (e) => {
+        if(globalMarketData) {
+            renderData(globalMarketData, e.target.value);
+        }
+    });
 
     // Fetch and render data
     fetchData();
@@ -26,44 +34,105 @@ async function fetchData() {
     try {
         const response = await fetch('market_data.json?t=' + new Date().getTime());
         if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
+        globalMarketData = await response.json();
 
         // Update last updated text
-        document.getElementById('last-updated').textContent = `Last updated: ${data.last_updated}`;
+        document.getElementById('last-updated').textContent = \Last updated: \\;
 
-        // Render Exchange Rates
-        const exchangeGrid = document.getElementById('exchange-rates-grid');
-        data.exchange_rates.forEach(item => {
-            createCard(item, exchangeGrid);
-        });
-
-        // Render Indices
-        const indicesGrid = document.getElementById('indices-grid');
-        data.indices.forEach(item => {
-            createCard(item, indicesGrid);
-        });
-        
-        // Render Custom Indices V1
-        if(data.custom_indices_v1) {
-            const grid = document.getElementById('custom-indices-v1-grid');
-            data.custom_indices_v1.forEach(item => createCard(item, grid));
-        }
-        // Render Custom Indices V2
-        if(data.custom_indices_v2) {
-            const grid = document.getElementById('custom-indices-v2-grid');
-            data.custom_indices_v2.forEach(item => createCard(item, grid));
-        }
-        // Render Custom Indices V3
-        if(data.custom_indices_v3) {
-            const grid = document.getElementById('custom-indices-v3-grid');
-            data.custom_indices_v3.forEach(item => createCard(item, grid));
-        }
+        // Initial render with selected timeframe
+        const tf = document.getElementById('timeframe-selector').value;
+        renderData(globalMarketData, tf);
 
     } catch (error) {
         console.error('Error fetching data:', error);
-        document.getElementById('last-updated').textContent = `Error: ${error.message}`;
-        document.getElementById('last-updated').style.color = 'var(--positive)';
+        document.getElementById('last-updated').textContent = 'Error loading data';
         document.querySelector('.pulse-dot').style.display = 'none';
+        document.getElementById('last-updated').style.color = '#ef4444';
+    }
+}
+
+function sliceData(item, timeframe) {
+    let days = 252; // default 1y
+    if (timeframe === '3m') days = 63;
+    if (timeframe === '6m') days = 126;
+    if (timeframe === '1y') days = 252;
+    if (timeframe === '3y') days = 756;
+    if (timeframe === '5y') days = 9999; // whole array
+
+    // Create a deep copy to avoid mutating global data
+    const slicedItem = JSON.parse(JSON.stringify(item));
+    
+    const totalLen = slicedItem.history.data.length;
+    const sliceLen = Math.min(days, totalLen);
+    
+    slicedItem.history.labels = slicedItem.history.labels.slice(-sliceLen);
+    slicedItem.history.data = slicedItem.history.data.slice(-sliceLen);
+    
+    // Recalculate stats based on sliced data
+    const dataArr = slicedItem.history.data;
+    if(dataArr.length > 0) {
+        slicedItem.current = dataArr[dataArr.length - 1];
+        // Keep original 1-day change percent
+        
+        slicedItem.stats.high = Math.max(...dataArr);
+        slicedItem.stats.low = Math.min(...dataArr);
+        
+        const sum = dataArr.reduce((a,b) => a+b, 0);
+        slicedItem.stats.mean = sum / dataArr.length;
+        
+        const sorted = [...dataArr].sort((a,b) => a-b);
+        const mid = Math.floor(sorted.length / 2);
+        slicedItem.stats.median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+    
+    return slicedItem;
+}
+
+function renderData(data, timeframe) {
+    // Destroy old charts to prevent memory leaks
+    currentChartInstances.forEach(chart => chart.destroy());
+    currentChartInstances = [];
+
+    // Clear existing grids
+    document.getElementById('exchange-rates-grid').innerHTML = '';
+    document.getElementById('indices-grid').innerHTML = '';
+    document.getElementById('custom-indices-v1-grid').innerHTML = '';
+    document.getElementById('custom-indices-v2-grid').innerHTML = '';
+    document.getElementById('custom-indices-v3-grid').innerHTML = '';
+    
+    document.querySelector('.pulse-dot').style.display = 'none';
+    document.getElementById('last-updated').style.color = 'var(--text-primary)';
+
+    // Render Exchange Rates
+    const exchangeGrid = document.getElementById('exchange-rates-grid');
+    if(data.exchange_rates) {
+        data.exchange_rates.forEach(item => {
+            createCard(sliceData(item, timeframe), exchangeGrid);
+        });
+    }
+
+    // Render Indices
+    const indicesGrid = document.getElementById('indices-grid');
+    if(data.indices) {
+        data.indices.forEach(item => {
+            createCard(sliceData(item, timeframe), indicesGrid);
+        });
+    }
+    
+    // Render Custom Indices V1
+    if(data.custom_indices_v1) {
+        const grid = document.getElementById('custom-indices-v1-grid');
+        data.custom_indices_v1.forEach(item => createCard(sliceData(item, timeframe), grid));
+    }
+    // Render Custom Indices V2
+    if(data.custom_indices_v2) {
+        const grid = document.getElementById('custom-indices-v2-grid');
+        data.custom_indices_v2.forEach(item => createCard(sliceData(item, timeframe), grid));
+    }
+    // Render Custom Indices V3
+    if(data.custom_indices_v3) {
+        const grid = document.getElementById('custom-indices-v3-grid');
+        data.custom_indices_v3.forEach(item => createCard(sliceData(item, timeframe), grid));
     }
 }
 
@@ -74,10 +143,13 @@ function createCard(item, container) {
     // Populate data
     clone.querySelector('.card-title').textContent = item.name;
     clone.querySelector('.card-symbol').textContent = item.symbol;
-    clone.querySelector('.card-current').textContent = item.current.toLocaleString();
+    
+    // Format appropriately (avoid .00 for large numbers, but keep precision for small)
+    const currentVal = item.current < 10 ? item.current.toFixed(4) : item.current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    clone.querySelector('.card-current').textContent = currentVal;
     
     const changeEl = clone.querySelector('.card-change');
-    const changeText = item.change_percent > 0 ? `â–² +${item.change_percent}%` : `â–¼ ${item.change_percent}%`;
+    const changeText = item.change_percent > 0 ? \¡ã +\%\ : \¡å \%\;
     changeEl.textContent = changeText;
     changeEl.classList.add(item.change_percent > 0 ? 'up' : 'down');
 
@@ -92,17 +164,18 @@ function createCard(item, container) {
 
     // Populate stats
     if (item.stats) {
-        cardEl.querySelector('.stat-mean').textContent = item.stats.mean.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        cardEl.querySelector('.stat-median').textContent = item.stats.median.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        cardEl.querySelector('.stat-high').textContent = item.stats.high.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        cardEl.querySelector('.stat-low').textContent = item.stats.low.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const p = item.current < 10 ? 4 : 2;
+        cardEl.querySelector('.stat-mean').textContent = item.stats.mean.toLocaleString(undefined, {minimumFractionDigits: p, maximumFractionDigits: p});
+        cardEl.querySelector('.stat-median').textContent = item.stats.median.toLocaleString(undefined, {minimumFractionDigits: p, maximumFractionDigits: p});
+        cardEl.querySelector('.stat-high').textContent = item.stats.high.toLocaleString(undefined, {minimumFractionDigits: p, maximumFractionDigits: p});
+        cardEl.querySelector('.stat-low').textContent = item.stats.low.toLocaleString(undefined, {minimumFractionDigits: p, maximumFractionDigits: p});
     }
 
     // Korean style colors
     const color = isUp ? '#ef4444' : '#3b82f6'; 
     const bgColor = isUp ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)';
 
-    new Chart(canvas, {
+    const chart = new Chart(canvas, {
         type: 'line',
         data: {
             labels: item.history.labels,
@@ -134,7 +207,7 @@ function createCard(item, container) {
                     displayColors: false,
                     callbacks: {
                         label: function(context) {
-                            return `${context.parsed.y.toLocaleString()}`;
+                            return \\\;
                         }
                     }
                 }
@@ -155,4 +228,5 @@ function createCard(item, container) {
             }
         }
     });
+    currentChartInstances.push(chart);
 }
