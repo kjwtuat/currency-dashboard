@@ -82,6 +82,22 @@ function sliceData(item, timeframe) {
         const sorted = [...dataArr].sort((a,b) => a-b);
         const mid = Math.floor(sorted.length / 2);
         slicedItem.stats.median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        
+        // 동적 재정규화 (Dynamic Re-normalization) for Custom Indices
+        if (item.name.startsWith('V1') || item.name.startsWith('V2') || item.name.startsWith('V3')) {
+            const scale = 100 / slicedItem.stats.mean;
+            slicedItem.history.data = dataArr.map(val => val * scale);
+            
+            // Recalculate stats for the scaled data
+            const newDataArr = slicedItem.history.data;
+            slicedItem.current = newDataArr[newDataArr.length - 1];
+            slicedItem.stats.high = Math.max(...newDataArr);
+            slicedItem.stats.low = Math.min(...newDataArr);
+            slicedItem.stats.mean = 100; // By definition
+            
+            const sortedNew = [...newDataArr].sort((a,b) => a-b);
+            slicedItem.stats.median = sortedNew.length % 2 !== 0 ? sortedNew[mid] : (sortedNew[mid - 1] + sortedNew[mid]) / 2;
+        }
     }
     
     return slicedItem;
