@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Currency & Index Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="header-left">
+                <h1>Market Dashboard</h1>
+                <p class="subtitle">Global Currency & Indices (52-Week Trend)</p>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <button id="refresh-btn" class="refresh-btn" title="최신 데이터 불러오기">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-10.09l5.67-5.67"/></svg>
+                        Get Recent Data
+                    </button>
+                    <div class="status-text">
+                        <span class="pulse-dot"></span>
+                        <span id="last-updated">Updating...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-target="exchange-rates">🇰🇷 환율 (Exchange Rates)</button>
+            <button class="tab-btn" data-target="indices">🌍 인덱스 (Indices)</button>
+            <button class="tab-btn" data-target="custom-indices">🛠️ 커스텀 인덱스</button>
+        </nav>
+
+        <main>
+            <!-- Exchange Rates Section -->
+            <section id="exchange-rates" class="tab-content active">
+                <div class="grid" id="exchange-rates-grid">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+            </section>
+
+            <!-- Indices Section -->
+            <section id="indices" class="tab-content">
+                <div class="grid" id="indices-grid">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+            </section>
+            
+            <!-- Custom Indices Section -->
+            <section id="custom-indices" class="tab-content">
+                <div class="grid" id="custom-indices-grid">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+                <div class="section-description">
+                    <p>ℹ️ <strong>커스텀 인덱스 산출 방식:</strong> 달러, 유로, 엔, 위안, 원화로 구성된 5개국 통화 바스켓의 1년 평균 가치를 기준점(100)으로 삼아, 전 세계 주요 통화 대비 해당 통화가 상대적으로 얼마나 강세/약세인지를 기하평균으로 산출한 지수입니다.</p>
+                    <ul class="formula-list">
+                        <li><strong>1단계 (가치 역산):</strong> 각 통화의 대(對) 달러 환율을 역산(1/환율)하여 '1달러당 통화의 절대 가치'를 구합니다.</li>
+                        <li><strong>2단계 (정규화):</strong> 이 절대 가치를 지난 1년(52주)간의 '평균 절대 가치'로 나누어 정규화합니다. (즉, 1년 평균일 때 1.0이 됨)</li>
+                        <li><strong>3단계 (글로벌 기준값 산출):</strong> 5개국(USD, EUR, JPY, CNY, KRW)의 정규화된 가치를 모두 곱한 후 5제곱근을 취하는 <strong>기하평균(Geometric Mean)</strong> 방식으로 글로벌 기준값을 산출합니다.</li>
+                        <li><strong>4단계 (최종 인덱스):</strong> 개별 통화의 정규화된 가치를 글로벌 기준값으로 나눈 뒤 100을 곱하여, 다른 통화들 대비 얼마나 가치가 올랐는지(혹은 떨어졌는지)를 100을 기준으로 나타냅니다.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Template for a Card -->
+    <template id="card-template">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Title</h3>
+                <span class="card-symbol">SYMBOL</span>
+            </div>
+            <div class="card-price-section">
+                <div class="card-current">0.00</div>
+                <div class="card-change">0.00%</div>
+            </div>
+            <div class="chart-container">
+                <canvas></canvas>
+            </div>
+            <div class="card-stats">
+                <div class="stat-item">
+                    <span class="stat-label">52주 평균</span>
+                    <strong class="stat-mean">0.00</strong>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">52주 중앙값</span>
+                    <strong class="stat-median">0.00</strong>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">52주 최고</span>
+                    <strong class="stat-high" style="color: #ef4444;">0.00</strong>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">52주 최저</span>
+                    <strong class="stat-low" style="color: #3b82f6;">0.00</strong>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>
