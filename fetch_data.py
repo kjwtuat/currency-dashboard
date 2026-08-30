@@ -140,7 +140,7 @@ def fetch_market_data():
             
             result["custom_indices"] = []
             
-            for currency, name_kr in [('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), ('CNY', '위안화')]:
+            for currency, name_kr in [('USD', '달러'), ('KRW', '원화'), ('JPY', '엔화'), ('EUR', '유로화'), ('CNY', '위안화')]:
                 idx_series = (v_norm[currency] / geom_mean_basket) * 100
                 labels = idx_series.index.strftime('%Y-%m-%d').tolist()
                 data = idx_series.tolist()
