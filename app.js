@@ -37,7 +37,7 @@ async function fetchData() {
         globalMarketData = await response.json();
 
         // Update last updated text
-        document.getElementById('last-updated').textContent = \Last updated: \\;
+        document.getElementById('last-updated').textContent = `Last updated: ${globalMarketData.last_updated}`;
 
         // Initial render with selected timeframe
         const tf = document.getElementById('timeframe-selector').value;
@@ -72,7 +72,6 @@ function sliceData(item, timeframe) {
     const dataArr = slicedItem.history.data;
     if(dataArr.length > 0) {
         slicedItem.current = dataArr[dataArr.length - 1];
-        // Keep original 1-day change percent
         
         slicedItem.stats.high = Math.max(...dataArr);
         slicedItem.stats.low = Math.min(...dataArr);
@@ -149,7 +148,7 @@ function createCard(item, container) {
     clone.querySelector('.card-current').textContent = currentVal;
     
     const changeEl = clone.querySelector('.card-change');
-    const changeText = item.change_percent > 0 ? \¡ã +\%\ : \¡å \%\;
+    const changeText = item.change_percent > 0 ? `â–² +${item.change_percent}%` : `â–¼ ${item.change_percent}%`;
     changeEl.textContent = changeText;
     changeEl.classList.add(item.change_percent > 0 ? 'up' : 'down');
 
@@ -207,7 +206,7 @@ function createCard(item, container) {
                     displayColors: false,
                     callbacks: {
                         label: function(context) {
-                            return \\\;
+                            return `${context.parsed.y.toLocaleString()}`;
                         }
                     }
                 }
