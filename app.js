@@ -122,7 +122,7 @@ function renderData(data, timeframe) {
     const exchangeGrid = document.getElementById('exchange-rates-grid');
     if(data.exchange_rates) {
         data.exchange_rates.forEach(item => {
-            createCard(sliceData(item, timeframe), exchangeGrid);
+            createCard(sliceData(item, timeframe), exchangeGrid, timeframe);
         });
     }
 
@@ -130,28 +130,28 @@ function renderData(data, timeframe) {
     const indicesGrid = document.getElementById('indices-grid');
     if(data.indices) {
         data.indices.forEach(item => {
-            createCard(sliceData(item, timeframe), indicesGrid);
+            createCard(sliceData(item, timeframe), indicesGrid, timeframe);
         });
     }
     
     // Render Custom Indices V1
     if(data.custom_indices_v1) {
         const grid = document.getElementById('custom-indices-v1-grid');
-        data.custom_indices_v1.forEach(item => createCard(sliceData(item, timeframe), grid));
+        data.custom_indices_v1.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
     }
     // Render Custom Indices V2
     if(data.custom_indices_v2) {
         const grid = document.getElementById('custom-indices-v2-grid');
-        data.custom_indices_v2.forEach(item => createCard(sliceData(item, timeframe), grid));
+        data.custom_indices_v2.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
     }
     // Render Custom Indices V3
     if(data.custom_indices_v3) {
         const grid = document.getElementById('custom-indices-v3-grid');
-        data.custom_indices_v3.forEach(item => createCard(sliceData(item, timeframe), grid));
+        data.custom_indices_v3.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
     }
 }
 
-function createCard(item, container) {
+function createCard(item, container, timeframe = '1y') {
     const template = document.getElementById('card-template');
     const clone = template.content.cloneNode(true);
 
@@ -176,6 +176,22 @@ function createCard(item, container) {
     container.appendChild(clone);
 
     const isUp = item.change_percent > 0;
+
+    // Update stat labels based on timeframe
+    let labelPrefix = '1년';
+    if(timeframe === '3m') labelPrefix = '3개월';
+    if(timeframe === '6m') labelPrefix = '6개월';
+    if(timeframe === '1y') labelPrefix = '1년';
+    if(timeframe === '3y') labelPrefix = '3년';
+    if(timeframe === '5y') labelPrefix = '5년';
+
+    const labels = cardEl.querySelectorAll('.stat-label');
+    if (labels.length >= 4) {
+        labels[0].textContent = `${labelPrefix} 평균`;
+        labels[1].textContent = `${labelPrefix} 중앙값`;
+        labels[2].textContent = `${labelPrefix} 최고`;
+        labels[3].textContent = `${labelPrefix} 최저`;
+    }
 
     // Populate stats
     if (item.stats) {
