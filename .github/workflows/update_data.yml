@@ -2,7 +2,7 @@ name: Update Market Data
 
 on:
   schedule:
-    - cron: '0 21 * * *' # Run daily at 6:00 AM KST (21:00 UTC)
+    - cron: '30 21 * * *' # Run daily at 6:30 AM KST (21:30 UTC)
   workflow_dispatch: # Allow manual trigger
 
 jobs:
