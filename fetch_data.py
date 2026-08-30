@@ -63,20 +63,22 @@ def fetch_market_data():
                 prev_price = data[-2] if len(data) > 1 else current_price
                 change_percent = ((current_price - prev_price) / prev_price) * 100
                 
+                precision = 4 if current_price < 10 else 2
+                
                 result["exchange_rates"].append({
                     "name": name,
                     "symbol": symbol,
-                    "current": round(current_price, 2),
+                    "current": round(current_price, precision),
                     "change_percent": round(change_percent, 2),
                     "stats": {
-                        "mean": round(float(np.mean(data)), 2),
-                        "median": round(float(np.median(data)), 2),
-                        "high": round(float(np.max(data)), 2),
-                        "low": round(float(np.min(data)), 2)
+                        "mean": round(float(np.mean(data)), precision),
+                        "median": round(float(np.median(data)), precision),
+                        "high": round(float(np.max(data)), precision),
+                        "low": round(float(np.min(data)), precision)
                     },
                     "history": {
                         "labels": labels,
-                        "data": [round(val, 2) for val in data]
+                        "data": [round(val, precision) for val in data]
                     }
                 })
                 print(f"[OK] Loaded {name}")
