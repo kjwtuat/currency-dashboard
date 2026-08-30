@@ -51,7 +51,7 @@ async function fetchData() {
     }
 }
 
-function sliceData(item, timeframe) {
+function sliceData(item, timeframe, isCustomIndex = false) {
     let days = 252; // default 1y
     if (timeframe === '3m') days = 63;
     if (timeframe === '6m') days = 126;
@@ -84,7 +84,7 @@ function sliceData(item, timeframe) {
         slicedItem.stats.median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         
         // 동적 재정규화 (Dynamic Re-normalization) for Custom Indices
-        if (item.name.startsWith('V1') || item.name.startsWith('V2') || item.name.startsWith('V3')) {
+        if (isCustomIndex) {
             const scale = 100 / slicedItem.stats.mean;
             slicedItem.history.data = dataArr.map(val => val * scale);
             
@@ -137,17 +137,17 @@ function renderData(data, timeframe) {
     // Render Custom Indices V1
     if(data.custom_indices_v1) {
         const grid = document.getElementById('custom-indices-v1-grid');
-        data.custom_indices_v1.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
+        data.custom_indices_v1.forEach(item => createCard(sliceData(item, timeframe, true), grid, timeframe));
     }
     // Render Custom Indices V2
     if(data.custom_indices_v2) {
         const grid = document.getElementById('custom-indices-v2-grid');
-        data.custom_indices_v2.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
+        data.custom_indices_v2.forEach(item => createCard(sliceData(item, timeframe, true), grid, timeframe));
     }
     // Render Custom Indices V3
     if(data.custom_indices_v3) {
         const grid = document.getElementById('custom-indices-v3-grid');
-        data.custom_indices_v3.forEach(item => createCard(sliceData(item, timeframe), grid, timeframe));
+        data.custom_indices_v3.forEach(item => createCard(sliceData(item, timeframe, true), grid, timeframe));
     }
 }
 
