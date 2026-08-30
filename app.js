@@ -16,27 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Refresh Button Logic
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-        const btn = document.getElementById('refresh-btn');
-        btn.classList.add('spinning');
-        btn.disabled = true;
-        
-        // Clear existing grids
-        document.getElementById('exchange-rates-grid').innerHTML = '';
-        document.getElementById('indices-grid').innerHTML = '';
-        document.getElementById('custom-indices-v1-grid').innerHTML = '';
-        document.getElementById('custom-indices-v2-grid').innerHTML = '';
-        document.getElementById('custom-indices-v3-grid').innerHTML = '';
-        document.getElementById('last-updated').textContent = 'Updating...';
-        document.querySelector('.pulse-dot').style.display = 'block';
-        document.getElementById('last-updated').style.color = 'var(--text-secondary)';
 
-        fetchData().finally(() => {
-            btn.classList.remove('spinning');
-            btn.disabled = false;
-        });
-    });
 
     // Fetch and render data
     fetchData();
